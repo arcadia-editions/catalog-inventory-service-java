@@ -21,14 +21,16 @@
 		<openApiApiPackage>${basePackage}.adapters.web</openApiApiPackage>
 		<openApiModelPackage>${basePackage}.adapters.web.dtos</openApiModelPackage>
 
-		<openapi.inputSpec>https://raw.githubusercontent.com/arcadia-editions/catalog-inventory-api/refs/heads/main/openapi.yml</openapi.inputSpec>
-		<asyncapi.inputSpec>https://raw.githubusercontent.com/arcadia-editions/catalog-inventory-api/refs/heads/main/asyncapi.yml</asyncapi.inputSpec>
+		<!-- models and contracts: released service-all package (GitHub Packages), never refs/heads/main -->
+		<catalog-inventory-api.version>0.2.0</catalog-inventory-api.version>
+		<openapi.inputSpec>com/arcadiaeditions/catalog/inventory-management/catalog-inventory/openapi.yml</openapi.inputSpec>
+		<asyncapi.inputSpec>classpath:com/arcadiaeditions/catalog/inventory-management/catalog-inventory/asyncapi.yml</asyncapi.inputSpec>
 		<!-- avro types referenced by name from the event schemas (comma separated, order matters: dependencies first) -->
-		<asyncapi.avro.imports>https://raw.githubusercontent.com/arcadia-editions/catalog-inventory-api/refs/heads/main/avro/StockAdjustmentReason.avsc,https://raw.githubusercontent.com/arcadia-editions/catalog-inventory-api/refs/heads/main/avro/StockReleaseReason.avsc,https://raw.githubusercontent.com/arcadia-editions/catalog-inventory-api/refs/heads/main/avro/StockReleasedItem.avsc,https://raw.githubusercontent.com/arcadia-editions/catalog-inventory-api/refs/heads/main/avro/StockReservationConfirmedItem.avsc</asyncapi.avro.imports>
+		<asyncapi.avro.imports>classpath:com/arcadiaeditions/catalog/inventory-management/catalog-inventory/avro/StockAdjustmentReason.avsc,classpath:com/arcadiaeditions/catalog/inventory-management/catalog-inventory/avro/StockReleaseReason.avsc,classpath:com/arcadiaeditions/catalog/inventory-management/catalog-inventory/avro/StockReleasedItem.avsc,classpath:com/arcadiaeditions/catalog/inventory-management/catalog-inventory/avro/StockReservationConfirmedItem.avsc</asyncapi.avro.imports>
 		<asyncApiModelPackage>${basePackage}.asyncapi.provider.dtos</asyncApiModelPackage>
 		<asyncApiProducerApiPackage>${basePackage}.asyncapi.provider</asyncApiProducerApiPackage>
 		<asyncApiConsumerApiPackage>${basePackage}.asyncapi.provider</asyncApiConsumerApiPackage>
-		<asyncapi.client.inputSpec>https://raw.githubusercontent.com/arcadia-editions/catalog-inventory-api/refs/heads/main/asyncapi-client.yml</asyncapi.client.inputSpec>
+		<asyncapi.client.inputSpec>classpath:com/arcadiaeditions/catalog/inventory-management/catalog-inventory/asyncapi-client.yml</asyncapi.client.inputSpec>
 		<!-- generated AsyncAPI SDK lives outside the hexagon: asyncapi.provider (asyncapi.yml) and asyncapi.client (asyncapi-client.yml) -->
 		<asyncApiClientApiPackage>${basePackage}.asyncapi.client</asyncApiClientApiPackage>
 
@@ -183,6 +185,19 @@
 		</dependency>
 	</dependencies>
 
+	<repositories>
+		<repository>
+			<id>github</id>
+			<url>https://maven.pkg.github.com/arcadia-editions/arcadia-editions-architecture</url>
+		</repository>
+	</repositories>
+	<pluginRepositories>
+		<pluginRepository>
+			<id>github</id>
+			<url>https://maven.pkg.github.com/arcadia-editions/arcadia-editions-architecture</url>
+		</pluginRepository>
+	</pluginRepositories>
+
 	<build>
 		<plugins>
 			<plugin>
@@ -306,6 +321,13 @@
 				<groupId>org.openapitools</groupId>
 				<artifactId>openapi-generator-maven-plugin</artifactId>
 				<version>${openapi-generator-maven-plugin.version}</version>
+				<dependencies>
+					<dependency>
+						<groupId>com.arcadiaeditions.catalog.inventory-management.catalog-inventory</groupId>
+						<artifactId>service-all</artifactId>
+						<version>${catalog-inventory-api.version}</version>
+					</dependency>
+				</dependencies>
 				<executions>
 					<execution>
 						<goals>
@@ -393,6 +415,11 @@
 						<groupId>io.zenwave360.sdk.plugins</groupId>
 						<artifactId>asyncapi-generator</artifactId>
 						<version>${zenwave.version}</version>
+					</dependency>
+					<dependency>
+						<groupId>com.arcadiaeditions.catalog.inventory-management.catalog-inventory</groupId>
+						<artifactId>service-all</artifactId>
+						<version>${catalog-inventory-api.version}</version>
 					</dependency>
 				</dependencies>
 			</plugin>
