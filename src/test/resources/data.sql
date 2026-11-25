@@ -38,7 +38,7 @@
 -- Read side: no query endpoint in openapi.yml 0.2.0; InventoryPosition returned by the backoffice POSTs
 --
 -- ASSUMPTIONS: assumption | value used | open question
--- A-01 reservationId format | RSV-<order number>-<line n> | generation rule not in the model (HITL task)
+-- A-01 reservationId format | RSV-<order number>-<line n> | fixture ids only; the service generates a UUIDv7 (T-05, decided 2026-11-25)
 -- A-02 counters: reserved = sum of RESERVED quantities, sold = sum of CONFIRMED, release returns quantity to available | SKU-001 9/0/1, SKU-002 97/3/0, SKU-003 8/1/1 | counting rule not in the model (HITL task)
 -- A-03 expiresAt = reservedAt + 10 minutes | ZFL @time("10 minutes after OrderCreated") | -
 -- A-04 reservedAt = order createdAt of the orders fixture, except C-05 (09:40:05): orders' ORD-005 created 09:50:05 cannot have been released by the timer before "now" | as listed | reported to orders

@@ -89,8 +89,8 @@ mvn -q test -Dtest='<TestClass>'
 # on fixed ports 5432, 9092, 8081, 2181: stop other compose stacks first; a leftover stack made a first run fail every IT).
 # Surefire failures stop the build before the integration tests: add -Dmaven.test.failure.ignore=true to see both.
 # known failing at the baseline (2026-11-25), each fixed by a board task (docs/tasks.md tests:):
-#   InventoryServiceTest (4), InventoryBackofficeServiceTest (3), InventoryApiControllerTest (2), InventoryBackofficeApiControllerTest (3):
-#     TestDataLoader reads data/jpa/<table name>, no fixture loads -> T-01 (then the behavior tasks T-09, T-10, T-14, T-20, T-26..T-28)
+#   InventoryApiControllerTest.confirmStockReservationTest, InventoryBackofficeApiControllerTest.receiveStockTest, .adjustStockTest:
+#     not implemented (service returns empty) -> T-10, T-27, T-28 (TestDataLoader fixed 2026-11-25: fixtures load, service tests pass)
 #   StockReservationRepositoryIntegrationTest.updateTest: asserts Instant.now() -> T-01
 #   InventoryApiIntegrationTest (4), InventoryBackofficeApiIntegrationTest (6): no datasource (@EnableDockerCompose commented out) -> T-01 (_400);
 #     _201 not implemented -> T-09, T-10, T-26, T-27, T-28
