@@ -2,6 +2,7 @@
 
 flow: ../arcadia-editions-architecture/business-flows/place-order-flow.zfl
 baseline:
+approved: 2026-11-25 by the person (tasks and slices reviewed)
 branch: afk/place-order-flow
 
 <!--
@@ -22,7 +23,7 @@ review: [ ]
 - [ ] T-01 mechanical AFK Generated tests that should pass do: updateTest without Instant.now(), API ITs with a datasource (@EnableDockerCompose in BaseWebTestClientTest)
       test data: data/jpa/StockReservation/1.json, data/jpa/InventoryPosition/1.json, data.sql (C-01, id 1)
       tests: StockReservationRepositoryIntegrationTest#updateTest, InventoryApiIntegrationTest#testReserveStock_400, InventoryApiIntegrationTest#testConfirmStockReservation_400, InventoryBackofficeApiIntegrationTest#testCreateInventoryPosition_400, InventoryBackofficeApiIntegrationTest#testReceiveStock_400, InventoryBackofficeApiIntegrationTest#testAdjustStock_400
-- [ ] T-02 bounded HITL ArchitectureTest fails: core.application uses the generated producers in asyncapi.provider (outside the hexagon, as zenwave-scripts.zw sets it). Decide: allow the dependency in the rule, or put an outbound port in core.outbound; record it as an ADR
+- [x] T-02 bounded HITL ArchitectureTest fails: core.application uses the generated producers in asyncapi.provider (outside the hexagon, as zenwave-scripts.zw sets it). Decide: allow the dependency in the rule, or put an outbound port in core.outbound; record it as an ADR. Decided 2026-11-25 by the person: allow it in the rule (EventProducerSDK layer), docs/adr/0001-core-application-uses-generated-event-producers.md
       tests: ArchitectureTest
 - [ ] T-03 mechanical AFK Inject a java.time.Clock (system clock in main, fixed 2026-10-14T10:00:00Z in tests) for every timestamp the services set
       tests: InventoryServiceTest

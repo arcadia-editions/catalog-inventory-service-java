@@ -94,7 +94,6 @@ mvn -q test -Dtest='<TestClass>'
 #   StockReservationRepositoryIntegrationTest.updateTest: asserts Instant.now() -> T-01
 #   InventoryApiIntegrationTest (4), InventoryBackofficeApiIntegrationTest (6): no datasource (@EnableDockerCompose commented out) -> T-01 (_400);
 #     _201 not implemented -> T-09, T-10, T-26, T-27, T-28
-#   ArchitectureTest.respectsLayersForHexagonalArchitecture: core.application uses asyncapi.provider -> T-02 (HITL)
 mvn -q verify -Dmaven.test.failure.ignore=true
 # lint the models
 bash .zenwave/bin/lint-zdl.sh --strict ../catalog-inventory-api/domain-model.zdl
