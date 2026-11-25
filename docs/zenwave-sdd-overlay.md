@@ -85,12 +85,12 @@ mkdir -p .zenwave/work && mvn -DskipTests clean compile 2>&1 | tee .zenwave/work
 # focused tests of a task (the implementer runs only these)
 mvn -q test -Dtest='<TestClass>'
 # full suite with integration tests and containers (once per slice review)
-# about 3 minutes (176 s, 2026-11-25); needs Docker (Testcontainers starts the docker-compose PostgreSQL / Kafka / Schema Registry
+# about 2.5 minutes (155 s, 2026-11-25, after T-02 and the TestDataLoader fix); needs Docker (Testcontainers starts the docker-compose PostgreSQL / Kafka / Schema Registry
 # on fixed ports 5432, 9092, 8081, 2181: stop other compose stacks first; a leftover stack made a first run fail every IT).
 # Surefire failures stop the build before the integration tests: add -Dmaven.test.failure.ignore=true to see both.
 # known failing at the baseline (2026-11-25), each fixed by a board task (docs/tasks.md tests:):
 #   InventoryApiControllerTest.confirmStockReservationTest, InventoryBackofficeApiControllerTest.receiveStockTest, .adjustStockTest:
-#     not implemented (service returns empty) -> T-10, T-27, T-28 (TestDataLoader fixed 2026-11-25: fixtures load, service tests pass)
+#     not implemented (confirm: no reservation loaded, NoSuchElement; receive/adjust: Avro event fields not set) -> T-10, T-27, T-28 (TestDataLoader fixed 2026-11-25: fixtures load, service tests pass)
 #   StockReservationRepositoryIntegrationTest.updateTest: asserts Instant.now() -> T-01
 #   InventoryApiIntegrationTest (4), InventoryBackofficeApiIntegrationTest (6): no datasource (@EnableDockerCompose commented out) -> T-01 (_400);
 #     _201 not implemented -> T-09, T-10, T-26, T-27, T-28
