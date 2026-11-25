@@ -41,6 +41,7 @@ review: [ ]
       test data: data.sql (C-02)
 - [ ] T-08 mechanical AFK Spring Cloud Stream bindings in application.yml for the produced channels (stock-released, stock-reservation-confirmed, stock-received, stock-adjusted) and the consumed payment-void-failed-event-v1, replacing the archetype's on-customer-event
       model: ../catalog-inventory-api/domain-model.zdl:197, ../catalog-inventory-api/domain-model.zdl:210, ../catalog-inventory-api/domain-model.zdl:271, ../catalog-inventory-api/domain-model.zdl:283, ../catalog-inventory-api/domain-model.zdl:177
+      test data: data.sql (C-02 for a produced event, C-12 for the consumed one)
       tests: InventoryApiIntegrationTest
       blocked by: T-01
 
@@ -122,6 +123,7 @@ review: [ ]
 
 - [ ] T-19 advanced AFK Outbound port for payments getPaymentStatus (POST /payments/status) with its REST client generated from payments-processing service-all 0.2.0 openapi.yml (not main; see docs/backlog/http-clients.md), and an in-memory stub for tests (NO_PAYMENT / STARTED by orderId)
       model: ../catalog-inventory-api/domain-model.zdl:187, ../payments-processing-api/domain-model.zdl:196-198, ../arcadia-editions-architecture/business-flows/place-order-flow.zfl:293-297
+      test data: stub-driven (no row): the stub answers NO_PAYMENT / STARTED for C-11 by orderId
       tests: PaymentsProcessingClientStubTest
       blocked by: T-01
 - [ ] T-20 bounded AFK expireReservation: load the RESERVED lines of the order; none: no-op, no event (late fire); call getPaymentStatus; NO_PAYMENT: RELEASED RESERVATION_EXPIRED + releasedAt, counters per T-06, persist, one StockReleased; STARTED: nothing
