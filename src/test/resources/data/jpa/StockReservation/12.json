@@ -1,0 +1,11 @@
+{
+    "id": 551,
+    "version": 0,
+    "reservationId": "RSV-011-1",
+    "orderId": "ORD-011",
+    "sku": "SKU-002",
+    "quantity": 1,
+    "status": "RESERVED",
+    "reservedAt": "2026-10-14T09:45:11Z",
+    "expiresAt": "2026-10-14T09:55:11Z"
+}
