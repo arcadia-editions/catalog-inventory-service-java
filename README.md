@@ -1,5 +1,7 @@
 # Arcadia Editions - Catalog Inventory Service
 
+The domain model and the OpenAPI/AsyncAPI contracts live in [catalog-inventory-api](https://github.com/arcadia-editions/catalog-inventory-api) and are read from there (see `zenwave-scripts.zw` and `pom.xml`).
+
 
 A Java + Spring Boot service created from the ZenWave archetype. Its structure is generated from a ZenWave domain model (ZDL) with the ZenWave SDK, and API contracts (OpenAPI, AsyncAPI) are turned into code on every Maven build.
 
