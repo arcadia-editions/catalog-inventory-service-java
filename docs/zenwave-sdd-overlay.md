@@ -80,17 +80,26 @@ export JAVA_HOME=~/.sdkman/candidates/java/current
 # the 3 plugin blocks of zenwave-scripts.zw, in order (BackendApplicationDefaultPlugin, OpenAPIControllersPlugin,
 # SpringWebTestClientPlugin); the IDE play button shows each `jbang zw -p <Plugin> ...` command. Never --force.
 # Then: mvn -DskipTests clean test-compile (runs the OpenAPI / AsyncAPI Maven generators) and review git diff.
-# compile, and collect MapStruct warnings
-mkdir -p target && mvn -q -DskipTests clean compile 2>&1 | tee target/compile.log
+# compile, and collect MapStruct warnings (log outside target/: `clean` would delete it)
+mkdir -p .zenwave/work && mvn -DskipTests clean compile 2>&1 | tee .zenwave/work/compile.log; grep -i "unmapped target" .zenwave/work/compile.log
 # focused tests of a task (the implementer runs only these)
 mvn -q test -Dtest='<TestClass>'
 # full suite with integration tests and containers (once per slice review)
-# <after generation: full suite takes about N minutes, needs Docker (Testcontainers starts the docker-compose PostgreSQL / Kafka / Schema Registry)>
-mvn -q verify
+# about 3 minutes (176 s, 2026-11-25); needs Docker (Testcontainers starts the docker-compose PostgreSQL / Kafka / Schema Registry
+# on fixed ports 5432, 9092, 8081, 2181: stop other compose stacks first; a leftover stack made a first run fail every IT).
+# Surefire failures stop the build before the integration tests: add -Dmaven.test.failure.ignore=true to see both.
+# known failing at the baseline (2026-11-25), each fixed by a board task (docs/tasks.md tests:):
+#   InventoryServiceTest (4), InventoryBackofficeServiceTest (3), InventoryApiControllerTest (2), InventoryBackofficeApiControllerTest (3):
+#     TestDataLoader reads data/jpa/<table name>, no fixture loads -> T-01 (then the behavior tasks T-09, T-10, T-14, T-20, T-26..T-28)
+#   StockReservationRepositoryIntegrationTest.updateTest: asserts Instant.now() -> T-01
+#   InventoryApiIntegrationTest (4), InventoryBackofficeApiIntegrationTest (6): no datasource (@EnableDockerCompose commented out) -> T-01 (_400);
+#     _201 not implemented -> T-09, T-10, T-26, T-27, T-28
+#   ArchitectureTest.respectsLayersForHexagonalArchitecture: core.application uses asyncapi.provider -> T-02 (HITL)
+mvn -q verify -Dmaven.test.failure.ignore=true
 # lint the models
 bash .zenwave/bin/lint-zdl.sh --strict ../catalog-inventory-api/domain-model.zdl
 # export the Hibernate DDL (JPA)
-bash .claude/skills/zenwave-test-data/scripts/export-ddl.sh
+bash .claude/skills/zenwave-test-data/scripts/export-ddl.sh -t StockReservationRepositoryIntegrationTest  # -t needed: without it the abstract base boots and nothing is written
 ```
 
 The orchestrator gives the workers the focused command (with the task's `tests:`) and the reviewer the full one.
