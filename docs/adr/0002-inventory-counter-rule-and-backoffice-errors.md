@@ -24,6 +24,9 @@ Backoffice and edge cases (T-25), all "throw, as generated", no special answers:
 - `adjustStock` that would take `availableQuantity` below 0: throws.
 - unknown sku (`receiveStock`, `adjustStock`): throws (not found).
 - `createInventoryPosition` with an existing sku: throws.
+- `reserveStock` with an unknown sku: counts as `availableQuantity` 0, so the order is UNAVAILABLE (gate grill G-09).
+- `reserveStock` with the same sku on several lines: one reservation per line, availability checked against the sum
+  of the lines of that sku (G-10).
 - orderId with no reservations: `confirmStockReservation` answers `StockReservationNotHeldResult`; `releaseStock` is a
   no-op without event (same as already RELEASED, ZDL).
 
