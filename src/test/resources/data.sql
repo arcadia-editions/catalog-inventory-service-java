@@ -33,13 +33,13 @@
 -- Multiplicity: one reservation per order line -> C-02 (2 lines)
 -- Time: expiresAt = reservedAt + 10 min; past deadline C-11, before deadline C-02. the timer trigger is an in-process scheduler on expiresAt (board task)
 -- Redelivery: confirmStockReservation on CONFIRMED -> C-01; releaseStock on RELEASED -> C-03; expireReservation with no RESERVED line -> C-03/C-06;
---   reserveStock redelivery for an orderId already reserved -> no rule in the model (HITL task), C-02 usable
+--   reserveStock redelivery for an orderId already reserved -> throws (T-07 decided), C-02 usable
 -- Backoffice: createInventoryPosition new sku -> no row (e.g. SKU-099), duplicate -> SKU-001 (unique); receiveStock / adjustStock -> SKU-001
 -- Read side: no query endpoint in openapi.yml 0.2.0; InventoryPosition returned by the backoffice POSTs
 --
 -- ASSUMPTIONS: assumption | value used | open question
 -- A-01 reservationId format | RSV-<order number>-<line n> | fixture ids only; the service generates a UUIDv7 (T-05, decided 2026-11-25)
--- A-02 counters: reserved = sum of RESERVED quantities, sold = sum of CONFIRMED, release returns quantity to available | SKU-001 9/0/1, SKU-002 97/3/0, SKU-003 8/1/1 | counting rule not in the model (HITL task)
+-- A-02 counters: reserved = sum of RESERVED quantities, sold = sum of CONFIRMED, release returns quantity to available | SKU-001 9/0/1, SKU-002 97/3/0, SKU-003 8/1/1 | decided T-06, ADR 0002
 -- A-03 expiresAt = reservedAt + 10 minutes | ZFL @time("10 minutes after OrderCreated") | -
 -- A-04 reservedAt = order createdAt of the orders fixture, except C-05 (09:40:05): orders' ORD-005 created 09:50:05 cannot have been released by the timer before "now" | as listed | reported to orders
 -- A-05 releasedAt ~1 s before the order's cancelledAt; confirmedAt = order confirmedAt | as listed | -
