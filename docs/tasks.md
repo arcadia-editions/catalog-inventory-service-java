@@ -14,7 +14,7 @@ ZDL = ../catalog-inventory-api/domain-model.zdl, payments ZDL = ../payments-proc
 Test data chains C-01..C-14: header of src/test/resources/data.sql (assumptions A-01..A-06 there).
 Approved models: catalog-inventory-api service-all 0.2.0 (tag release/service-all/v0.2.0); ZFL at
 arcadia-editions-architecture tag baseline/place-order-flow-<n>.
-Open proposal: P-01 (asyncapi-client.yml 0.2.0 consumes only payment-void-failed) blocks T-16, T-18.
+P-01 closed 2026-11-26: service-all 0.2.1 consumes the four releaseStock triggers (T-16, T-18 unblocked).
 The backoffice commands are outside place-order-flow: slice S6 only because their generated tests fail at the baseline.
 -->
 
@@ -105,23 +105,21 @@ review: [ ]
       test data: data.sql (C-12)
       tests: PaymentVoidFailedConsumerServiceTest
       blocked by: T-08, T-14
-- [!] T-16 mechanical AFK Consumers for PaymentDeclined, PaymentRetryExhausted, PaymentVoided: reason PAYMENT_DECLINED, PAYMENT_RETRY_EXHAUSTED, PAYMENT_VOIDED, call releaseStock
+- [ ] T-16 mechanical AFK Consumers for PaymentDeclined, PaymentRetryExhausted, PaymentVoided: reason PAYMENT_DECLINED, PAYMENT_RETRY_EXHAUSTED, PAYMENT_VOIDED, call releaseStock
       model: ../catalog-inventory-api/domain-model.zdl:174-176, ../arcadia-editions-architecture/business-flows/place-order-flow.zfl:263
       test data: data.sql (C-02, C-12)
       tests: PaymentDeclinedConsumerServiceTest, PaymentRetryExhaustedConsumerServiceTest, PaymentVoidedConsumerServiceTest
       blocked by: T-14
-      blocked: P-01
 - [ ] T-17 bounded AFK Flow test orderCancelled, void refused (catalog side): a PaymentVoidFailed message releases a CONFIRMED order (C-12 shape) and publishes StockReleased PAYMENT_VOID_FAILED; redelivered, it publishes nothing
       model: ../arcadia-editions-architecture/business-flows/place-order-flow.zfl:255-266, ../arcadia-editions-architecture/business-flows/place-order-flow.zfl:340-344
       test data: data.sql (C-10, C-12, C-03)
       tests: PlaceOrderFlowCancelledTest#voidFailed
       blocked by: T-15
-- [!] T-18 bounded AFK Flow test orderCancelled, other causes (catalog side): PaymentDeclined, PaymentRetryExhausted (from RESERVED), PaymentVoided (from CONFIRMED) publish StockReleased with their reason
+- [ ] T-18 bounded AFK Flow test orderCancelled, other causes (catalog side): PaymentDeclined, PaymentRetryExhausted (from RESERVED), PaymentVoided (from CONFIRMED) publish StockReleased with their reason
       model: ../arcadia-editions-architecture/business-flows/place-order-flow.zfl:255-266, ../arcadia-editions-architecture/business-flows/place-order-flow.zfl:340-344
       test data: data.sql (C-02, C-04, C-07, C-08, C-09, C-12)
       tests: PlaceOrderFlowCancelledTest
       blocked by: T-16, T-17
-      blocked: P-01
 
 ## S4 orderCancelled (reservation expired)
 path: ReservationExpired (10 minutes after OrderCreated) > expireReservation > getPaymentStatus[NoPaymentResult]

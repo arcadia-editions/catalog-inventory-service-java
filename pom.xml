@@ -22,7 +22,7 @@
 		<openApiModelPackage>${basePackage}.adapters.web.dtos</openApiModelPackage>
 
 		<!-- models and contracts: released service-all package (GitHub Packages), never refs/heads/main -->
-		<catalog-inventory-api.version>0.2.0</catalog-inventory-api.version>
+		<catalog-inventory-api.version>0.2.1</catalog-inventory-api.version>
 		<openapi.inputSpec>com/arcadiaeditions/catalog/inventory-management/catalog-inventory/openapi.yml</openapi.inputSpec>
 		<asyncapi.inputSpec>classpath:com/arcadiaeditions/catalog/inventory-management/catalog-inventory/asyncapi.yml</asyncapi.inputSpec>
 		<!-- avro types referenced by name from the event schemas (comma separated, order matters: dependencies first) -->
