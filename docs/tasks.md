@@ -3,6 +3,7 @@
 flow: ../arcadia-editions-architecture/business-flows/place-order-flow.zfl
 baseline:
 approved: 2026-11-25 by the person (tasks and slices reviewed)
+gate: 2026-11-26 items 4, 5, 13 reviewed by claude on behalf of the person (docs/gate/)
 branch: afk/place-order-flow
 
 <!--
@@ -40,7 +41,7 @@ review: [ ]
 - [x] T-07 bounded HITL Decide what reserveStock does when the orderId already has reservations. Decided 2026-11-25 by the person: it throws an exception, no idempotency (demo project, keep it simple)
       model: ../catalog-inventory-api/domain-model.zdl:169-171, ../arcadia-editions-architecture/business-flows/place-order-flow.zfl:62-64
       test data: data.sql (C-02)
-- [ ] T-08 mechanical AFK Spring Cloud Stream bindings in application.yml for the produced channels (stock-released, stock-reservation-confirmed, stock-received, stock-adjusted) and the consumed payment-void-failed-event-v1, replacing the archetype's on-customer-event
+- [ ] T-08 mechanical AFK Spring Cloud Stream bindings in application.yml for the produced channels (the outbox producers' bindings on-stock-released-out, on-stock-reservation-confirmed-out, on-stock-received-out, on-stock-adjusted-out, destinations = asyncapi.yml addresses) and the consumed payment-void-failed-event-v1 (function payment-void-failed-event-v1, binding payment-void-failed-event-v1-in-0, group catalog_inventory), replacing the archetype's on-customer-event; Confluent Avro wire format with native encoding, String keys, kafka-avro-serializer 8.0.0 per docs/adr/0004-avro-wire-format-confluent.md
       model: ../catalog-inventory-api/domain-model.zdl:197, ../catalog-inventory-api/domain-model.zdl:210, ../catalog-inventory-api/domain-model.zdl:271, ../catalog-inventory-api/domain-model.zdl:283, ../catalog-inventory-api/domain-model.zdl:177
       test data: data.sql (C-02 for a produced event, C-12 for the consumed one)
       tests: InventoryApiIntegrationTest
@@ -52,7 +53,7 @@ path: StartOrderCheckout > startOrderCheckout > reserveStock[StockReservedResult
       > StockReservationConfirmed > OrderConfirmed > ... > end completed
 review: [ ]
 
-- [ ] T-09 bounded AFK reserveStock reserved: every line has the stock, one RESERVED reservation per line (reservationId a UUIDv7 per T-05, reservedAt from the Clock, expiresAt = reservedAt + 10 min), counters per T-06, persist, answer RESERVED with the lines and expiresAt; an orderId that already has reservations throws (T-07)
+- [ ] T-09 bounded AFK reserveStock reserved: every line has the stock, one RESERVED reservation per line (reservationId a UUIDv7 per T-05, reservedAt from the Clock, expiresAt = reservedAt + 10 min), counters per T-06, persist, answer RESERVED with the lines and expiresAt; an orderId that already has reservations throws (T-07); the same sku on several lines: one reservation per line, availability checked against their sum (ADR 0002)
       model: ../arcadia-editions-architecture/business-flows/place-order-flow.zfl:94-105, ../catalog-inventory-api/domain-model.zdl:56-67, ../catalog-inventory-api/domain-model.zdl:84-90, ../catalog-inventory-api/domain-model.zdl:131-155, ../catalog-inventory-api/domain-model.zdl:169-171
       test data: data.sql (C-02 for the shape of a reservation; SKU-002, SKU-003 positions)
       tests: InventoryServiceTest#reserveStockTest, InventoryApiControllerTest#reserveStockTest, InventoryApiIntegrationTest#testReserveStock_201
@@ -73,9 +74,9 @@ path: StartOrderCheckout > startOrderCheckout > reserveStock[StockUnavailableRes
       > sendStockUnavailableNotification > end stockGone
 review: [ ]
 
-- [ ] T-12 bounded AFK reserveStock unavailable: when some line lacks stock, create no reservation and change no counter; answer UNAVAILABLE with every short line (sku, requestedQuantity, availableQuantity)
+- [ ] T-12 bounded AFK reserveStock unavailable: when some line lacks stock (an unknown sku counts as availableQuantity 0, ADR 0002), create no reservation and change no counter; answer UNAVAILABLE with every short line (sku, requestedQuantity, availableQuantity)
       model: ../arcadia-editions-architecture/business-flows/place-order-flow.zfl:94-105, ../catalog-inventory-api/domain-model.zdl:131-144, ../catalog-inventory-api/domain-model.zdl:157-164
-      test data: data.sql (C-13 SKU-004 none available, C-14 SKU-005 less than requested, mixed with SKU-002)
+      test data: data.sql (C-13 SKU-004 none available, C-14 SKU-005 less than requested, mixed with SKU-002; unknown SKU-099)
       tests: InventoryServiceTest#reserveStockUnavailableTest, InventoryApiIntegrationTest#testReserveStockUnavailable
       blocked by: T-09
 - [ ] T-13 bounded AFK Flow test stockGone (catalog side): POST reserve with SKU-004 answers UNAVAILABLE, no StockReservation row, counters unchanged
@@ -94,6 +95,11 @@ review: [ ]
       test data: data.sql (C-02 from RESERVED, C-12 from CONFIRMED, C-03 redelivery)
       tests: InventoryServiceTest#releaseStockTest
       blocked by: T-01, T-03, T-04, T-06
+- [ ] T-29 bounded AFK Transactional outbox test (docs/adr/0003): a command that saves and emits stores the event in event_publication and it reaches catalog-inventory.stock-released.event.avro.v1 only after commit; when the transaction rolls back nothing is published
+      model: ../catalog-inventory-api/domain-model.zdl:179, ../catalog-inventory-api/domain-model.zdl:197-207
+      test data: data.sql (C-02)
+      tests: TransactionalOutboxIntegrationTest
+      blocked by: T-08, T-14
 - [ ] T-15 mechanical AFK PaymentVoidFailedConsumerService: map PaymentVoidFailed.orderId to ReleaseStockInput with reason PAYMENT_VOID_FAILED (from the event type, never its free-text reason) and call releaseStock
       model: ../catalog-inventory-api/domain-model.zdl:98-102, ../catalog-inventory-api/domain-model.zdl:177, ../arcadia-editions-architecture/business-flows/place-order-flow.zfl:255-266
       test data: data.sql (C-12)

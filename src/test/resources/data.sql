@@ -1,7 +1,7 @@
 -- Scenario test data. Regenerate with $zenwave-test-scenarios (place-order-flow).
 -- DDL exported 2026-11-25 to target/ddl/schema.sql (models: catalog-inventory service-all 0.2.0). Aggregates: StockReservation
 -- (stock_reservation), InventoryPosition (inventory_position).
--- Fixed test "now" (fixed Clock, still to be added by a board task): 2026-10-14T10:00:00Z. Reservation window: 10 minutes (ZFL).
+-- Fixed test "now" (fixed Clock, board task T-03): 2026-10-14T10:00:00Z. Reservation window: 10 minutes (ZFL).
 -- JSON mirrors: src/test/resources/data/jpa/<Entity>/<k>.json, k = row position in its table, id = 1 + (k-1)*50.
 -- Business ids shared with orders-checkout fixtures: ORD-00n, SKU-00n (same chain ids C-01..C-10).
 --
@@ -17,7 +17,7 @@
 -- C-09 | ORD-009, SKU-002x1 | RELEASED PAYMENT_VOIDED, was CONFIRMED (order CANCELLED) | outcome cancelled after fulfillment / capture failure
 -- C-10 | ORD-010, SKU-002x1 | RELEASED PAYMENT_VOID_FAILED, was CONFIRMED (order CANCELLED) | outcome cancelled, void refused
 -- C-11 | ORD-011, SKU-002x1 | RESERVED, expired 09:55:11 (past deadline) | expireReservation expired (NO_PAYMENT, stub-driven) / payment started (stub-driven); off-chain (no order fixture; catalog never reads orders)
--- C-12 | ORD-012, SKU-003x1 | CONFIRMED (order CONFIRMED, fulfillment pending) | releaseStock from CONFIRMED (PAYMENT_VOIDED); off-chain
+-- C-12 | ORD-012, SKU-003x1 | CONFIRMED (order CONFIRMED, fulfillment pending) | releaseStock from CONFIRMED (PAYMENT_VOID_FAILED today, T-15/T-17; PAYMENT_VOIDED once P-01 is released, T-18); off-chain
 -- C-13 | SKU-004 | InventoryPosition 0 available | reserveStock UNAVAILABLE (whole order); same SKU-004 as orders' stock-unavailable stub
 -- C-14 | SKU-005 | InventoryPosition 1 available | reserveStock UNAVAILABLE with less than requested (request 2); mixed order SKU-002 + SKU-005
 --
@@ -31,9 +31,11 @@
 -- Outcomes: completed C-01; cancelled by decline C-07, retries exhausted C-08, voided C-09, void refused C-10, expiry C-06;
 --   stockGone -> no reservation row (C-13 position); notificationFailed -> no row (notifications context)
 -- Multiplicity: one reservation per order line -> C-02 (2 lines)
--- Time: expiresAt = reservedAt + 10 min; past deadline C-11, before deadline C-02. the timer trigger is an in-process scheduler on expiresAt (board task)
+-- Time: expiresAt = reservedAt + 10 min; past deadline C-11, before deadline C-02. the timer trigger is an in-process scheduler on expiresAt (T-21)
 -- Redelivery: confirmStockReservation on CONFIRMED -> C-01; releaseStock on RELEASED -> C-03; expireReservation with no RESERVED line -> C-03/C-06;
 --   reserveStock redelivery for an orderId already reserved -> throws (T-07 decided), C-02 usable
+-- Edge (ADR 0002): reserveStock unknown sku -> no row (e.g. SKU-099), UNAVAILABLE with availableQuantity 0; same sku on two lines -> SKU-002 (97)
+-- Outbox (ADR 0003, T-29): no row; event_publication is created empty by Spring Modulith
 -- Backoffice: createInventoryPosition new sku -> no row (e.g. SKU-099), duplicate -> SKU-001 (unique); receiveStock / adjustStock -> SKU-001
 -- Read side: no query endpoint in openapi.yml 0.2.0; InventoryPosition returned by the backoffice POSTs
 --
