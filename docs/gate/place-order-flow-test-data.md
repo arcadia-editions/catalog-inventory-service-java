@@ -27,3 +27,11 @@ the JSON mirrors in `src/test/resources/data/jpa/` against [the board](../tasks.
   the outbox (no row, T-29). Board T-12 `test data:` names SKU-099.
 
 No row changed; the counters and states are as approved.
+
+## Re-check after service-all 0.2.1 (2026-11-26)
+
+Items 6-12, 14, 15 re-run by claude (opus) on behalf of the person. Staleness clean, compile ok, board OK, model refs
+in range. First suite run: the 3 new generated consumers require `IPayment{Declined,RetryExhausted,Voided}EventV1ConsumerService`
+beans, so every Spring context failed (repository ITs too: `data.sql` unvalidated). Decided (simplest, same as commit
+7028f83): context-boot stubs in `adapters/events/` that throw, filled by T-16. Second run 201 s: 13 failing, all
+already known in the overlay (controller tests 3, web ITs 10); repository ITs and service tests pass, data loads.

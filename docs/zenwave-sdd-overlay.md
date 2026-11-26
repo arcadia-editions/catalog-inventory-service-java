@@ -28,10 +28,10 @@ The flow also references the other contexts' ZDLs: `../orders-checkout-api`, `..
 
 **`zenwave-scripts.zw` and `pom.xml` read the models from a released package** (`@import(...)` and `classpath:`):
 
-- artifact and version: `com.arcadiaeditions.catalog.inventory-management.catalog-inventory:service-all:0.2.0` (the
+- artifact and version: `com.arcadiaeditions.catalog.inventory-management.catalog-inventory:service-all:0.2.1` (the
   `@import` of `zenwave-scripts.zw` and `pom.xml` `catalog-inventory-api.version` must match); plugin dependency of
-  `zenwave-sdk-maven-plugin` and `openapi-generator-maven-plugin`. The consumed event (`PaymentVoidFailed`) has no
-  named Avro types, so no other context's package is needed. Repository:
+  `zenwave-sdk-maven-plugin` and `openapi-generator-maven-plugin`. The consumed events (`PaymentDeclined`, `PaymentRetryExhausted`,
+  `PaymentVoided`, `PaymentVoidFailed`) have no named Avro types, so no other context's package is needed. Repository:
   `https://maven.pkg.github.com/arcadia-editions/arcadia-editions-architecture` (server id `github` in
   `~/.m2/settings.xml`). Folder inside the jar: `com/arcadiaeditions/catalog/inventory-management/catalog-inventory/`.
 - regenerate: `ZW_FILE=zenwave-scripts.zw node ../api-product-workflows/scripts/zenwave/generate-from-zdl.mjs . .`
@@ -50,7 +50,7 @@ The flow also references the other contexts' ZDLs: `../orders-checkout-api`, `..
   artifact (`domain-model`, `openapi`, `asyncapi-all`; it stamps the file versions and updates the architecture
   manifest), then `service-all`; bump `catalog-inventory-api.version` and the `@import`; regenerate.
 - residual coupling to `main` (not pinned by the package): the generated `asyncapi-client.yml` `$ref`s
-  `payments-processing-api/main/asyncapi.yml` (channel `payment-void-failed-event-v1`) and
+  `payments-processing-api/main/asyncapi.yml` (channels `payment-declined-event-v1`, `payment-retry-exhausted-event-v1`, `payment-voided-event-v1`, `payment-void-failed-event-v1`) and
   `api-contract-commons/refs/heads/main` (error topics, `CommonHeaders` trait; `asyncapi.yml` too); `domain-model.zdl`
   `apis { asyncapi client PaymentsProcessingApi, zdl client PaymentsProcessingZdl }` point at `main` of
   `payments-processing-api`.
@@ -87,13 +87,15 @@ mkdir -p .zenwave/work && mvn -DskipTests clean compile 2>&1 | tee .zenwave/work
 # focused tests of a task (the implementer runs only these)
 mvn -q test -Dtest='<TestClass>'
 # full suite with integration tests and containers (once per slice review)
-# about 3.5 minutes (217 s, 2026-11-26, with the transactional outbox; 155 s on 2026-11-25); needs Docker (Testcontainers starts the docker-compose PostgreSQL / Kafka / Schema Registry
+# about 3.5 minutes (201 s, 2026-11-26 after service-all 0.2.1; 217 s with the transactional outbox; 155 s on 2026-11-25); needs Docker (Testcontainers starts the docker-compose PostgreSQL / Kafka / Schema Registry
 # on fixed ports 5432, 9092, 8081, 2181: stop other compose stacks first; a leftover stack made a first run fail every IT).
 # Surefire failures stop the build before the integration tests: add -Dmaven.test.failure.ignore=true to see both.
-# known failing at the baseline (2026-11-25, unchanged 2026-11-26 with the outbox), each fixed by a board task (docs/tasks.md tests:):
+# known failing at the baseline (2026-11-25, unchanged 2026-11-26 with the outbox and after service-all 0.2.1), each fixed by a board task (docs/tasks.md tests:):
 #   InventoryApiControllerTest.confirmStockReservationTest, InventoryBackofficeApiControllerTest.receiveStockTest, .adjustStockTest:
 #     not implemented (confirm: no reservation loaded, NoSuchElement; receive/adjust: Avro event fields not set) -> T-10, T-27, T-28 (TestDataLoader fixed 2026-11-25: fixtures load, service tests pass)
-#   StockReservationRepositoryIntegrationTest.updateTest: asserts Instant.now() -> T-01
+#   StockReservationRepositoryIntegrationTest.updateTest: asserts Instant.now() -> T-01 (timing-dependent: passed 2026-11-26 after 0.2.1)
+#   service-all 0.2.1 consumers (payment-declined/-retry-exhausted/-voided): adapters/events/Payment{Declined,RetryExhausted,Voided}ConsumerService are
+#     context-boot stubs (throw UnsupportedOperationException, like PaymentVoidFailedConsumerService) -> T-16; without them every Spring test fails to load the context
 #   InventoryApiIntegrationTest (4), InventoryBackofficeApiIntegrationTest (6): no datasource (@EnableDockerCompose commented out) -> T-01 (_400);
 #     _201 not implemented -> T-09, T-10, T-26, T-27, T-28
 mvn -q verify -Dmaven.test.failure.ignore=true
