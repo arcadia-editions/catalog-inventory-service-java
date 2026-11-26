@@ -65,6 +65,8 @@ the sibling clones above; no mapping needed. This service owns `catalog-inventor
 - Code already in place: yes (`zenwave-tasks-from-code-and-models`). Generated with ZenWave SDK: yes (2.8.1, commit
   `0d3ae27`); service methods and event listeners are still the generated `TODO`s.
 - Stack: Java 25, Spring Boot 4.1.2, Spring Cloud Stream (Kafka), MapStruct, ArchUnit, Maven (no wrapper: `mvn`).
+- Events leave through a transactional outbox (Spring Modulith JDBC registry, `event_publication` table, sent to
+  Spring Cloud Stream after commit; ADR 0003): Kafka tests must wait for the event, the in-memory producer sees it at once.
 - Persistence: `jpa` (PostgreSQL; Testcontainers via docker-compose in tests).
 - Organization prefix and packages: `com.arcadiaeditions` (base package `com.arcadiaeditions.catalog.inventory`),
   `CleanHexagonalProjectLayout`: `core.domain`, `core.application`, `core.inbound`, `core.outbound`,
@@ -85,10 +87,10 @@ mkdir -p .zenwave/work && mvn -DskipTests clean compile 2>&1 | tee .zenwave/work
 # focused tests of a task (the implementer runs only these)
 mvn -q test -Dtest='<TestClass>'
 # full suite with integration tests and containers (once per slice review)
-# about 2.5 minutes (155 s, 2026-11-25, after T-02 and the TestDataLoader fix); needs Docker (Testcontainers starts the docker-compose PostgreSQL / Kafka / Schema Registry
+# about 3.5 minutes (217 s, 2026-11-26, with the transactional outbox; 155 s on 2026-11-25); needs Docker (Testcontainers starts the docker-compose PostgreSQL / Kafka / Schema Registry
 # on fixed ports 5432, 9092, 8081, 2181: stop other compose stacks first; a leftover stack made a first run fail every IT).
 # Surefire failures stop the build before the integration tests: add -Dmaven.test.failure.ignore=true to see both.
-# known failing at the baseline (2026-11-25), each fixed by a board task (docs/tasks.md tests:):
+# known failing at the baseline (2026-11-25, unchanged 2026-11-26 with the outbox), each fixed by a board task (docs/tasks.md tests:):
 #   InventoryApiControllerTest.confirmStockReservationTest, InventoryBackofficeApiControllerTest.receiveStockTest, .adjustStockTest:
 #     not implemented (confirm: no reservation loaded, NoSuchElement; receive/adjust: Avro event fields not set) -> T-10, T-27, T-28 (TestDataLoader fixed 2026-11-25: fixtures load, service tests pass)
 #   StockReservationRepositoryIntegrationTest.updateTest: asserts Instant.now() -> T-01
@@ -112,6 +114,8 @@ The orchestrator gives the workers the focused command (with the task's `tests:`
   Testcontainers.
 - Generated at build time into `target/` (never edit): OpenAPI interfaces and `*DTO`s, the AsyncAPI SDK.
 - Format with `mvn spotless:apply`.
-- Decisions already taken that the models don't show: none recorded yet (`docs/adr/`). For a reference
+- Decisions already taken that the models don't show: `docs/adr/` 0001 (core.application uses the generated
+  producers), 0002 (counter rule, backoffice errors), 0003 (transactional outbox), 0004 (Confluent Avro wire format);
+  gate grill decisions in `docs/gate/place-order-flow-grill.md`. For a reference
   implementation of the same flow, see `../arcadia-editions-modulith-service-java/docs/zenwave-sdd-overlay.md`
   (Project rules) and its ADRs.
